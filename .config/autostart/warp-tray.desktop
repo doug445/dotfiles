@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=WARP Dynamic Tray
+Comment=Dynamic Red/Green Cloudflare WARP tray applet
+Exec=/home/will/.local/bin/warp-tray
+Hidden=false
+NoDisplay=false
+X-KDE-autostart-after=panel
+X-GNOME-Autostart-enabled=true

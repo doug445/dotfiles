@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import gi, subprocess, os
+gi.require_version('Gtk', '3.0')
+gi.require_version('XApp', '1.0')
+from gi.repository import Gtk, XApp, GLib
+
+def check_status():
+    try:
+        res = subprocess.run(['warp-cli', 'status'], capture_output=True, text=True)
+        return "Connected" in res.stdout
+    except: return False
+
+# Explicitly map all 6 arguments Cinnamon sends so we don't check screen coordinates!
+def on_click(icon, x, y, button, time, panel_position):
+    if button != 1:  # 1 is Left Click
+        return
+
+    # Push the commands to the background instantly
+    if check_status():
+        os.system("warp-cli disconnect &")
+        os.system("notify-send 'Cloudflare WARP' 'Disconnected' --icon=network-offline &")
+    else:
+        os.system("warp-cli connect &")
+        os.system("notify-send 'Cloudflare WARP' 'Connected (Tunnel Only)' --icon=network-vpn &")
+        
+    # Force a UI update immediately
+    GLib.timeout_add(100, update_ui)
+
+def update_ui():
+    if check_status():
+        icon.set_icon_name(icon_green)
+        icon.set_tooltip_text("CloudflareWARP VPN on")
+    else:
+        icon.set_icon_name(icon_red)
+        icon.set_tooltip_text("CloudflareWARP VPN off")
+    return True
+
+home = os.path.expanduser('~')
+icon_green = f"{home}/.local/share/icons/warp-green.svg"
+icon_red = f"{home}/.local/share/icons/warp-red.svg"
+
+icon = XApp.StatusIcon()
+icon.connect("button-release-event", on_click)
+
+update_ui()
+GLib.timeout_add(2000, update_ui)
+
+Gtk.main()
